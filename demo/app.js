@@ -1,7 +1,8 @@
-import { matchMessage, buildSequence, renderPreview, graphemes, cellWidth, validateCatalog } from '../dist/index.js';
-import { sampleStations, demoProfile } from '../dist/sample.js';
+import { matchMessage, buildSequence, renderPreview, graphemes, cellWidth, validateCatalog, validateBundle, createDraft, restoreDraft } from '../dist/index.js';
+import { sampleBundle, demoProfile } from '../dist/sample.js';
 const $ = id => document.getElementById(id);
-let stations = sampleStations;
+let bundle = sampleBundle;
+let stations = bundle.stations;
 let selections = {};
 let draft = null;
 const element = (tag, text, className) => {
@@ -14,13 +15,18 @@ function render() {
   $('error').textContent = '';
   $('column').disabled = $('alignment').value !== 'fixed';
   try {
-    const options = { profileId: demoProfile.id, region: $('region').value, verifiedOnly: $('verified').checked };
+    const activeProfile = bundle.profiles.find(p => p.id === $('profile').value);
+    if (!activeProfile) throw new Error('請選擇列印格式');
+    const options = { profileId: activeProfile.id, region: $('region').value, verifiedOnly: $('verified').checked };
     if ($('alignment').value === 'fixed') options.column = Number($('column').value) - 1;
     const slots = matchMessage($('message').value, stations, options);
     const sequence = buildSequence(slots, selections);
-    const profile = { ...demoProfile, order: $('order').value };
+    const profile = { ...activeProfile, order: $('order').value };
     const preview = renderPreview(sequence, profile, $('field').value);
-    draft = { schemaVersion: 1, message: $('message').value.normalize('NFC'), profile, options, ...preview };
+    draft = createDraft($('message').value, bundle, options, selections, $('field').value, profile.order);
+    $('receipt-profile').textContent = profile.name;
+    $('profile-note').replaceChildren(document.createTextNode(`${profile.maxRows} 筆 · 每欄 ${profile.fieldCells} 格 · ${draft.profile.verification === 'receipt-verified' ? '有收據佐證（資料提供者標記）' : '格式未驗證'}`));
+    if (profile.evidence) $('profile-note').append(sourceLink('格式佐證', profile.evidence));
     $('candidates').replaceChildren();
     slots.forEach((slot, index) => {
       const row = element('div', undefined, 'candidate');
@@ -38,6 +44,14 @@ function render() {
         select.value = String(selections[index] ?? 0);
         select.addEventListener('change', () => { selections[index] = Number(select.value); render(); $(`candidate-${index}`).focus(); });
         content.append(label, select);
+        const selected = slot.candidates[selections[index] ?? 0];
+        const station = stations.find(s => s.id === selected.stationId);
+        const printed = station.labels.find(l => l.id === selected.labelId);
+        const source = element('p', `${station.operator} · ${station.name} · `, 'source');
+        source.append(sourceLink('正式站名來源', station.nameSource));
+        if (printed.evidence) source.append(document.createTextNode(' · '), sourceLink('列印佐證', printed.evidence));
+        else source.append(document.createTextNode(' · 列印名稱尚無佐證'));
+        content.append(source);
       }
       row.append(content); $('candidates').append(row);
     });
@@ -63,7 +77,7 @@ function render() {
     $('status').textContent = `${count} / ${sequence.length} 字已匹配 · ${preview.overflow ? '超過示意格式筆數' : '預覽由上往下閱讀'}`;
     $('sequence').textContent = `紀錄建立順序（僅排字）：${preview.chronologicalRows.map(row => row.selected?.stationName ?? '？').join(' → ') || '請輸入文字'}`;
     $('warnings').replaceChildren();
-    if (preview.overflow) $('warnings').append(element('li', '超過此示意格式的 20 筆上限；所有列仍保留供檢查。'));
+    if (preview.overflow) $('warnings').append(element('li', `超過此格式的 ${profile.maxRows} 筆上限；所有列仍保留供檢查。`));
     if (preview.warnings.some(w => w.includes('field width'))) $('warnings').append(element('li', '部分名稱超過欄位寬度。請確認設備的截斷規則。'));
     $('download').disabled = !sequence.length;
   } catch (error) {
@@ -72,32 +86,80 @@ function render() {
     $('status').textContent = '無法建立預覽'; $('sequence').textContent = ''; $('download').disabled = true;
   }
 }
-for (const id of ['message', 'region', 'field', 'alignment', 'column', 'order', 'verified']) {
-  $(id).addEventListener(id === 'message' || id === 'column' ? 'input' : 'change', () => { selections = {}; render(); });
+function sourceLink(title, value) {
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Not a web link');
+    const link = element('a', title); link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
+  } catch { return element('span', `${title}：${value}`); }
+}
+function updateControls(profileId = bundle.profiles[0].id) {
+  $('profile').replaceChildren(...bundle.profiles.map(p => new Option(p.name, p.id)));
+  $('profile').value = profileId;
+  $('region').replaceChildren(new Option('全部', ''), ...[...new Set(stations.map(s => s.region))].map(r => new Option(r, r)));
+  const profile = bundle.profiles.find(p => p.id === profileId);
+  $('order').value = profile.order;
+  $('column').max = String(profile.fieldCells);
+  $('catalog-note').textContent = `${stations.length} 站 · ${bundle.id} / ${bundle.version}。未匹配的字會保留空位。`;
+}
+for (const id of ['message', 'region', 'alignment', 'column', 'verified']) {
+  $(id).addEventListener(id === 'message' || id === 'column' ? 'input' : 'change', () => { selections = {}; $('import-status').textContent = ''; render(); });
+}
+for (const id of ['field', 'order']) $(id).addEventListener('change', render);
+$('profile').addEventListener('change', () => {
+  selections = {}; const profile = bundle.profiles.find(p => p.id === $('profile').value);
+  $('order').value = profile.order; $('column').max = String(profile.fieldCells); render();
+});
+async function readJson(input) {
+  const file = input.files[0];
+  if (!file) return undefined;
+  if (file.size > 2_000_000) throw new Error('資料檔上限為 2 MB');
+  return JSON.parse(await file.text());
 }
 $('catalog').addEventListener('change', async () => {
-  const file = $('catalog').files[0]; if (!file) return;
   try {
-    if (file.size > 2_000_000) throw new Error('資料檔上限為 2 MB');
-    const data = JSON.parse(await file.text());
-    if (!Array.isArray(data) || data.length > 10000) throw new Error('資料必須是最多 10,000 站的陣列');
-    validateCatalog(data);
-    stations = data; selections = {}; updateRegions(); render();
-    $('catalog-note').textContent = `已匯入 ${data.length} 站。只匹配 illustrative-v1 格式；詳見資料文件。`;
+    const data = await readJson($('catalog')); if (data === undefined) return;
+    let next = data;
+    if (Array.isArray(data)) {
+      validateCatalog(data);
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(data)));
+      const version = Array.from(new Uint8Array(digest), n => n.toString(16).padStart(2, '0')).join('');
+      next = { schemaVersion: 1, id: 'legacy-local', version, profiles: [demoProfile], stations: data };
+    }
+    validateBundle(next);
+    bundle = next; stations = bundle.stations; selections = {}; updateControls(); render();
+    $('import-status').textContent = '站名資料已載入。';
   } catch (error) { $('error').textContent = `匯入失敗，保留原資料：${error.message}`; }
   $('catalog').value = '';
 });
-function updateRegions() {
-  $('region').replaceChildren(new Option('全部', ''), ...[...new Set(stations.map(s => s.region))].map(r => new Option(r, r)));
-}
+$('draft-file').addEventListener('change', async () => {
+  try {
+    const data = await readJson($('draft-file')); if (data === undefined) return;
+    const restored = restoreDraft(data, bundle);
+    const d = restored.draft;
+    // Commit UI state only after the complete draft has validated.
+    updateControls(d.profile.id);
+    if (d.options.region && ![...$('region').options].some(o => o.value === d.options.region)) $('region').add(new Option(d.options.region, d.options.region));
+    $('message').value = d.message; $('region').value = d.options.region ?? '';
+    $('field').value = d.field; $('order').value = d.profile.order;
+    $('alignment').value = d.options.column === undefined ? 'any' : 'fixed';
+    $('column').value = String((d.options.column ?? 5) + 1);
+    $('verified').checked = d.options.verifiedOnly ?? false;
+    selections = restored.selections; render();
+    $('import-status').textContent = data.schemaVersion === 1 ? '舊版草稿已重新驗證並轉為新版。' : '草稿已還原，候選站已重新驗證。';
+  } catch (error) { $('error').textContent = `草稿匯入失敗，保留目前內容：${error.message}`; }
+  $('draft-file').value = '';
+});
 $('reset').addEventListener('click', () => {
-  stations = sampleStations; selections = {}; updateRegions();
-  $('catalog-note').textContent = '已恢復 7 站示範資料。可試「東京」「新宿」「上野」。'; render();
+  bundle = sampleBundle; stations = bundle.stations; selections = {}; updateControls(); render();
+  $('import-status').textContent = '已恢復示範資料。';
 });
-$('download').addEventListener('click', () => {
-  if (!draft) return;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' }));
-  const link = element('a'); link.href = url; link.download = 'ekispell-draft.json'; link.click();
+function downloadJson(value, name) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }));
+  const link = element('a'); link.href = url; link.download = name; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
+}
+$('download').addEventListener('click', () => { if (draft) downloadJson(draft, 'ekispell-draft.json'); });
+$('export-catalog').addEventListener('click', () => downloadJson(bundle, 'ekispell-catalog.json'));
+updateControls();
 render();

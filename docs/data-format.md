@@ -53,6 +53,40 @@ The MVP cell model supports ASCII and common full-width Japanese/CJK glyphs. An 
 
 Row capacity applies to the draft's selected rows only. A future travel planner MUST also count positioning trips, intermediate transactions, and any other records created by the journey.
 
-## Draft JSON
+## CatalogBundle
 
-The demo exports `schemaVersion: 1`, message, matching options, profile, selected rows, chronological rows, and warnings. It is a portable layout draft. Importing a saved draft is not implemented yet. Do not use it as a ticket, a proof of travel, or a routing result.
+Prefer a versioned bundle over a bare station array:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "my-stations",
+  "version": "2026-09-13.1",
+  "profiles": [{
+    "id": "illustrative-v1",
+    "name": "Illustrative only",
+    "maxRows": 20,
+    "fieldCells": 12,
+    "order": "oldest-first"
+  }],
+  "stations": []
+}
+```
+
+Every label profileId MUST resolve to exactly one profile. A bundle requires 1–100 profiles and at most 10,000 stations. Change the catalog version whenever its content changes. Bundle import replaces the active catalog after validation.
+
+Legacy Station[] imports use the illustrative-v1 profile, a `legacy-local` ID, and a SHA-256 version of JSON.stringify(data). Other profile IDs require a full bundle. Export the bundle after import to preserve its identity.
+
+A profile CAN include `verification`, `device`, `observedAt` (YYYY-MM-DD), and `evidence`. `receipt-verified` profiles MUST supply the other three fields. This is a contributor assertion, not independent verification by EkiSpell. A verified station label does not automatically verify its printer profile.
+
+## Draft JSON v2
+
+The demo exports `schemaVersion: 2`, `catalog: { id, version }`, message, options, profile, field, and choices. Each choice is null or `{ stationId, labelId, text, graphemeIndex }`. Store character occurrence identity, not candidate-array indexes.
+
+`restoreDraft` validates the active catalog, matching options, profile dimensions, and every selected label. It then recomputes the preview and warnings. Catalog/version mismatches or stale choices cause an error. A previously unmatched character that now has candidates also requires review. Cached completion or verification claims are not trusted.
+
+Legacy v1 drafts are accepted by validating their rows against the current catalog. They have no catalog version, so migration checks selected label identity/text/position and printer dimensions. New exports always use v2.
+
+Drafts contain no connected route. Do not use them as tickets, proof of travel, or routing results. Source links are displayed as clickable links only for HTTP(S); other evidence references remain plain text.
+
+Changing the order of a receipt-verified profile produces an unverified draft profile. The original device evidence does not verify an altered layout.

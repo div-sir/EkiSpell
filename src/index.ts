@@ -20,6 +20,10 @@ export interface PrintProfile {
   maxRows: number;
   fieldCells: number;
   order: 'oldest-first' | 'newest-first';
+  verification?: 'unverified' | 'receipt-verified';
+  device?: string;
+  observedAt?: string;
+  evidence?: string;
 }
 export interface Candidate {
   stationId: string;
@@ -139,3 +143,6 @@ export function renderPreview(sequence: readonly SequenceRow[], profile: PrintPr
   if (rows.some(row => row.selected && graphemes(row.selected.text).reduce((n, g) => n + cellWidth(g), 0) > profile.fieldCells)) warnings.push('A printed name exceeds the field width. No truncation has been assumed.');
   return { field, rows, chronologicalRows: profile.order === 'newest-first' ? [...rows].reverse() : [...rows], complete, overflow, warnings };
 }
+
+export { validateProfile, validateBundle, type CatalogBundle } from './catalog.js';
+export { createDraft, restoreDraft, type SavedDraft, type RestoredDraft } from './draft.js';

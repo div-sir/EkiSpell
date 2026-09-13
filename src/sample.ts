@@ -19,3 +19,15 @@ export const sampleStations: Station[] = [
   region: id === 'sendai' ? 'tohoku' : 'kanto', operator: 'JR East',
   labels: [{ id: 'demo', text: `JR東 ${name!}`, profileId: demoProfile.id, verification: 'unverified' }]
 }));
+
+/** A second synthetic layout demonstrates profile isolation, not a real machine. */
+export const sampleBundle = {
+  schemaVersion: 1 as const, id: 'ekispell-demo', version: '2026-09-13.2',
+  profiles: [demoProfile, {
+    id: 'name-only-demo', name: '站名原文示意（尚未驗證設備）',
+    maxRows: 10, fieldCells: 8, order: 'newest-first' as const
+  }],
+  stations: sampleStations.map(station => ({ ...station, labels: [...station.labels, {
+    id: 'name-only', text: station.name, profileId: 'name-only-demo', verification: 'unverified' as const
+  }] }))
+};

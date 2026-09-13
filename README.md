@@ -29,7 +29,10 @@ Open <http://127.0.0.1:4173/demo/>. Try `東京`, `新宿`, or `上野`.
 - Manual candidate selection and explicit unmatched slots.
 - Entry/exit column previews and oldest/newest-first creation order.
 - Row-limit and field-width warnings without silent truncation.
-- Local JSON catalog import and draft export in the browser.
+- Versioned catalog bundles and selectable print profiles.
+- Station-name sources and print-evidence links beside each selected candidate.
+- Local catalog import/export and draft save/restore, including v0.1 draft migration.
+- Manual station choices survive entry/exit and history-order changes.
 - No runtime dependencies, account, tracking, or backend API.
 
 ## Library example
@@ -58,7 +61,7 @@ console.log(preview.rows, preview.warnings);
 
 The demo contains **7 official station names**. Their printed labels use an **invented `JR東 ` prefix**. Every label is `unverified`. These are not transcriptions of the supplied reference photo. The photo, card number, balances, and journey history are not included.
 
-The sample profile's 20-row / 12-cell limits are illustrative. They do not establish the limits of any card or machine. Different devices need separately verified profiles. The matcher uses printed text, not station readings; it does not substitute hiragana, katakana, or similar kanji.
+Both sample profiles are illustrative: 20 rows / 12 cells with a synthetic prefix, and 10 rows / 8 cells with station names only. They do not establish the limits of any card or machine. Different devices need separately verified profiles. The matcher uses printed text, not station readings; it does not substitute hiragana, katakana, or similar kanji.
 
 The other end of each trip remains `—`. Travel connections, intermediate transactions, fare validity, schedules, and print availability are not checked. Do not treat a layout draft as travel instructions.
 
@@ -69,11 +72,35 @@ Official station-name sources (not printed-label evidence):
 - [JR East Shinagawa](https://www.jreast.co.jp/estation/stations/788.html)
 - [JR East station index: Shibuya, Yokohama, Ueno, Sendai](https://www.jreast.co.jp/estation/)
 
+## Save and restore
+
+```js
+import { createDraft, restoreDraft } from './dist/index.js';
+import { sampleBundle } from './dist/sample.js';
+
+const draft = createDraft('東京', sampleBundle, { profileId: 'illustrative-v1' });
+const restored = restoreDraft(JSON.parse(JSON.stringify(draft)), sampleBundle);
+console.log(restored.preview);
+```
+
+Drafts reference the catalog ID/version and selected label identities. Import the original catalog before opening a saved draft. A changed label or version causes an explicit error. The browser retains your current work if import fails. Export the catalog as well when you use custom data.
+
+## Browser checks
+
+```sh
+npx playwright install --with-deps chromium
+npm run test:browser
+```
+
+CI runs this check and saves desktop/mobile screenshots. The local test runner can use an existing Chromium executable through `EKISPELL_CHROMIUM_PATH`. Playwright is a development dependency only.
+
 ## Project files
 
 | Path | Purpose |
 | --- | --- |
 | `src/index.ts` | Public matching and layout API |
+| `src/catalog.ts` | Versioned catalogs and printer-profile validation |
+| `src/draft.ts` | Draft serialization and verified restoration |
 | `src/sample.ts` | Small, explicitly unverified sample catalog |
 | `demo/` | Browser demo in Traditional Chinese |
 | `tests/` | Core behavior and edge cases |

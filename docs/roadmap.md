@@ -12,6 +12,7 @@ Goal: turn text into an inspectable station-label layout.
 - [x] Local catalog import and draft JSON export.
 - [x] Small sourced station-name dataset with unverified demo labels.
 - [x] Core regression tests and Node 22/24 CI configuration.
+- [x] Reproducible desktop/mobile browser checks and screenshot CI job.
 - [x] MIT license, contribution guide, and data contract.
 - [ ] Merge reviewed MVP and tag release after review.
 
@@ -23,8 +24,8 @@ Acceptance: a fresh checkout passes npm ci and npm test. The demo supports keybo
 - [ ] Collect redacted receipt examples under contributor-approved terms.
 - [ ] Verify a useful regional station catalog with prefixes and abbreviations.
 - [ ] Add validation tooling and duplicate/conflicting-evidence reports.
-- [ ] Make profiles selectable and show each label's source in the demo.
-- [ ] Add saved-draft import and catalog version references.
+- [x] Make profiles selectable and show each label's source in the demo.
+- [x] Add saved-draft import and catalog version references.
 
 Acceptance: at least one device profile and 50 labels have reviewed evidence. Two contributors can independently reproduce representative layouts. Coverage gaps remain explicit.
 
