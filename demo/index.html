@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>EkiSpell · 讓車站拼出你的話</title><link rel="stylesheet" href="./style.css"></head>
+<body>
+<header><a class="brand" href="./">EkiSpell <span>駅スペル</span></a><a href="https://github.com/div-sir/EkiSpell">GitHub ↗</a></header>
+<main>
+<div class="eyebrow">STATION NAME LETTERPLAY / 001</div>
+<h1>讓車站，<br>拼出你的話<span>。</span></h1>
+<p class="intro">把想說的文字藏進站名。挑選車站，看看它們在乘車履歷上相遇的樣子。</p>
+<div class="workspace">
+<section class="editor" aria-labelledby="editor-title">
+<h2 id="editor-title"><span class="step">01</span> 設計你的文字</h2>
+<label for="message">想拼出的文字</label><input id="message" value="東京" maxlength="200" autocomplete="off" aria-describedby="catalog-note">
+<p class="hint" id="catalog-note">內建 7 站示範資料。可試「東京」「新宿」「上野」；未找到的字會保留空位。</p>
+<div class="controls">
+<div><label for="region">地區</label><select id="region"><option value="">全部</option><option value="kanto">關東</option><option value="tohoku">東北</option></select></div>
+<div><label for="field">排字欄位</label><select id="field"><option value="entry">進站</option><option value="exit">出站</option></select></div>
+<div><label for="alignment">對齊方式</label><select id="alignment"><option value="any">站名內任意位置</option><option value="fixed">固定列印位置</option></select></div>
+<div><label for="column">字的起始位置（半形格）</label><input id="column" type="number" min="1" max="12" value="6" disabled></div>
+<div><label for="order">列印順序</label><select id="order"><option value="oldest-first">舊紀錄在上</option><option value="newest-first">新紀錄在上</option></select></div>
+</div>
+<label class="check"><input id="verified" type="checkbox"> 僅使用收據已驗證的列印名稱</label>
+<p class="hint">目前內建列印名稱均未驗證。固定位置以半形格計算，日文字佔兩格。</p>
+<div id="error" role="alert"></div>
+<h2><span class="step">02</span> 選擇候選站</h2>
+<div id="candidates"></div>
+<details><summary>匯入自己的站名資料</summary><p class="hint">選擇符合 docs/data-format.md 的 Station[] JSON；只在本機處理。</p><input type="file" id="catalog" accept="application/json,.json" aria-label="匯入站名 JSON"><button id="reset" type="button">恢復示範資料</button></details>
+</section>
+<section class="preview-panel" aria-labelledby="preview-title">
+<div class="preview-heading"><h2 id="preview-title"><span class="step">03</span> 履歷預覽</h2><span class="badge">排字草稿</span></div>
+<p id="status" role="status" aria-live="polite"></p>
+<div class="receipt"><div class="receipt-title">ICカード ご利用履歴</div><p class="receipt-sub">EKISPELL · LAYOUT STUDY</p><div class="receipt-scroll"><table><thead><tr><th>#</th><th>入場</th><th>出場</th></tr></thead><tbody id="rows"></tbody></table></div><div class="receipt-footer">示意格式 · 非實際票證紀錄<br>未規劃的另一端車站以「—」表示</div></div>
+<p id="sequence" class="hint"></p><p class="notice">此頁只驗證排字。列印名稱、設備格式與行程連接尚未確認，不代表可行乘車路線。</p>
+<ul id="warnings"></ul><button id="download" type="button">下載排字草稿 JSON ↓</button>
+</section>
+</div>
+<footer>OPEN SOURCE, OPEN POSSIBILITIES.<span>讓每一站都有一點意義。</span></footer>
+</main><script type="module" src="./app.js"></script>
+</body></html>
