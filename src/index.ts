@@ -6,6 +6,9 @@ export interface Station {
   operator: string;
   nameSource: string;
   labels: PrintedLabel[];
+  lines?: { id: string; name: string }[];
+  sourceStationIds?: string[];
+  sourceGroupId?: string;
 }
 export interface PrintedLabel {
   id: string;
@@ -79,6 +82,7 @@ export function validateCatalog(stations: unknown): asserts stations is Station[
     if (!station.id || stationIds.has(station.id)) throw new Error('Station IDs must be unique and nonempty');
     stationIds.add(station.id);
     if (!station.name || !station.region || !station.operator || !station.nameSource) throw new Error('Station metadata is incomplete');
+    if (station.lines !== undefined && (!Array.isArray(station.lines) || station.lines.some((l: unknown) => !l || typeof l !== 'object' || typeof (l as {id?: unknown}).id !== 'string' || typeof (l as {name?: unknown}).name !== 'string'))) throw new Error('Invalid station lines');
     const labels = new Set<string>();
     for (const label of station.labels) {
       if (!label || typeof label !== 'object' || !['id', 'text', 'profileId'].every(key => typeof label[key] === 'string' && label[key].length > 0)) throw new Error('Invalid printed label');
@@ -147,3 +151,5 @@ export function renderPreview(sequence: readonly SequenceRow[], profile: PrintPr
 export { validateProfile, validateBundle, type CatalogBundle } from './catalog.js';
 export { createDraft, restoreDraft, type SavedDraft, type RestoredDraft } from './draft.js';
 export { planJourney, validateNetwork, type JourneyNetwork, type JourneyEdge, type JourneyStep, type JourneyRecord, type RouteOptions, type RouteResult } from './routing.js';
+
+export { buildStationApiCatalog, type StationApiManifest, type StationApiData, type StationApiRow } from './stationapi.js';

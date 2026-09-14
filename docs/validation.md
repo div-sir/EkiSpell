@@ -3,7 +3,7 @@
 ## Passed locally
 
 - Node.js 24.19.0; TypeScript 5.9.3 strict compilation.
-- 45 core tests, including versioned catalogs, printer evidence requirements, selection identity, v2 save/restore, v1 migration, and stale-data rejection.
+- 50 core tests, including versioned catalogs, printer evidence requirements, selection identity, v2 save/restore, v1 migration, and stale-data rejection.
 - Browser checks passed at desktop size and at 390 px / 320 px viewport widths.
 - Browser coverage: candidate preservation across field/order changes, profile isolation, source links, draft and catalog round-trips, version mismatch, malformed imports, fixed columns, verified-only mode, unmatched glyphs, JSON download, and no JavaScript errors or page-level horizontal overflow.
 - Desktop and mobile screenshots inspected with CJK fonts installed in the test environment.
@@ -27,3 +27,5 @@ The browser script writes `artifacts/desktop.png` and `artifacts/mobile.png`. CI
 ## Remaining limits
 
 Real printer output, real-world travel feasibility, fare calculations, and full regional coverage are not verified. Transaction routing is tested on synthetic networks only. Both built-in print formats remain illustrative. Evidence fields record contributor assertions; the validator does not independently verify receipts.
+
+Real data checks verify all SHA-256 hashes, 47-prefecture coverage, preserved source row counts, unverified label status, real-name matching, and full-catalog draft round trips.

@@ -11,12 +11,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./data/*": "./data/*"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "data/stationapi",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "repository": {
     "type": "git",

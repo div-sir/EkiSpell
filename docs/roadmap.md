@@ -20,6 +20,10 @@ Acceptance: a fresh checkout passes npm ci and npm test. The demo supports keybo
 
 ## v0.2 — Verified print data
 
+- [x] Integrate a licensed, pinned real station-name dataset with operator/line membership (TrainLCD/StationAPI).
+- [x] Add nationwide loading, prefecture filters, attribution, checksums, and deterministic update tooling.
+- [ ] Collect verified IC printer labels for these real stations.
+
 - [ ] Define device profiles with operator, model/location context, capture date, ordering, field width, row limits, and evidence.
 - [ ] Collect redacted receipt examples under contributor-approved terms.
 - [ ] Verify a useful regional station catalog with prefixes and abbreviations.

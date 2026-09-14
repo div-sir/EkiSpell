@@ -75,6 +75,18 @@ try {
   await page.waitForFunction(() => document.getElementById('import-status').textContent.includes('候選站已重新驗證'));
   assert.match(await page.locator('#status').innerText(), /1 \/ 1/);
 
+  await page.locator('#load-real').click();
+  await page.waitForFunction(() => document.getElementById('catalog-note').textContent.includes('stationapi-japan'));
+  await page.locator('#region').selectOption('JP-13');
+  await page.locator('#message').fill('東京');
+  assert.match(await page.locator('#status').innerText(), /2 \/ 2/);
+  assert.ok(await page.locator('.source').count() > 0);
+  const realDraft = await download('#download');
+  assert.equal(realDraft.catalog.id, 'stationapi-japan');
+  await page.locator('#message').fill('上野');
+  await importJson('#draft-file', realDraft);
+  await page.waitForFunction(() => document.getElementById('message').value === '東京');
+  assert.equal(await page.locator('#region').inputValue(), 'JP-13');
   await page.locator('#reset').click();
   await page.locator('#message').fill('東京');
   await page.locator('#field').selectOption('entry');

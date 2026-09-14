@@ -4,6 +4,7 @@ export interface CatalogBundle {
   schemaVersion: 1;
   id: string;
   version: string;
+  attribution?: { name: string; url: string; license: string; licenseText: string; revision: string }[];
   profiles: PrintProfile[];
   stations: Station[];
 }

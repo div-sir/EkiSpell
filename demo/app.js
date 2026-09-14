@@ -1,5 +1,8 @@
 import { matchMessage, buildSequence, renderPreview, graphemes, cellWidth, validateCatalog, validateBundle, createDraft, restoreDraft } from '../dist/index.js';
 import { sampleBundle, demoProfile } from '../dist/sample.js';
+import { loadRealCatalog } from './real-data.js';
+const prefectureNames = '北海道 青森 岩手 宮城 秋田 山形 福島 茨城 栃木 群馬 埼玉 千葉 東京 神奈川 新潟 富山 石川 福井 山梨 長野 岐阜 靜岡 愛知 三重 滋賀 京都 大阪 兵庫 奈良 和歌山 鳥取 島根 岡山 廣島 山口 德島 香川 愛媛 高知 福岡 佐賀 長崎 熊本 大分 宮崎 鹿兒島 沖繩'.split(' ');
+const regionName = r => /^JP-\d{2}$/.test(r) ? prefectureNames[Number(r.slice(3))-1] ?? r : r;
 const $ = id => document.getElementById(id);
 let bundle = sampleBundle;
 let stations = bundle.stations;
@@ -47,7 +50,7 @@ function render() {
         const selected = slot.candidates[selections[index] ?? 0];
         const station = stations.find(s => s.id === selected.stationId);
         const printed = station.labels.find(l => l.id === selected.labelId);
-        const source = element('p', `${station.operator} · ${station.name} · `, 'source');
+        const source = element('p', `${station.operator} · ${station.name}${station.lines?.length ? " · " + station.lines.map(l => l.name).join("／") : ""} · `, 'source');
         source.append(sourceLink('正式站名來源', station.nameSource));
         if (printed.evidence) source.append(document.createTextNode(' · '), sourceLink('列印佐證', printed.evidence));
         else source.append(document.createTextNode(' · 列印名稱尚無佐證'));
@@ -96,7 +99,7 @@ function sourceLink(title, value) {
 function updateControls(profileId = bundle.profiles[0].id) {
   $('profile').replaceChildren(...bundle.profiles.map(p => new Option(p.name, p.id)));
   $('profile').value = profileId;
-  $('region').replaceChildren(new Option('全部', ''), ...[...new Set(stations.map(s => s.region))].map(r => new Option(r, r)));
+  $('region').replaceChildren(new Option('全部', ''), ...[...new Set(stations.map(s => s.region))].map(r => new Option(regionName(r), r)));
   const profile = bundle.profiles.find(p => p.id === profileId);
   $('order').value = profile.order;
   $('column').max = String(profile.fieldCells);
@@ -113,7 +116,7 @@ $('profile').addEventListener('change', () => {
 async function readJson(input) {
   const file = input.files[0];
   if (!file) return undefined;
-  if (file.size > 2_000_000) throw new Error('資料檔上限為 2 MB');
+  if (file.size > 12_000_000) throw new Error('資料檔上限為 12 MB');
   return JSON.parse(await file.text());
 }
 $('catalog').addEventListener('change', async () => {
@@ -159,6 +162,15 @@ function downloadJson(value, name) {
   const link = element('a'); link.href = url; link.download = name; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+$('load-real').addEventListener('click', async () => {
+  $('load-real').disabled = true; $('real-status').textContent = '正在載入及校驗全國站名資料…';
+  try {
+    const next = await loadRealCatalog();
+    bundle = next; stations = bundle.stations; selections = {}; updateControls(); render();
+    $('real-status').textContent = `已載入 ${stations.length.toLocaleString()} 筆車站資料（依營運公司分組）。站名為社群資料；IC 列印未驗證。`;
+  } catch (error) { $('real-status').textContent = `載入失敗，保留目前資料：${error.message}`; }
+  finally { $('load-real').disabled = false; }
+});
 $('download').addEventListener('click', () => { if (draft) downloadJson(draft, 'ekispell-draft.json'); });
 $('export-catalog').addEventListener('click', () => downloadJson(bundle, 'ekispell-catalog.json'));
 updateControls();

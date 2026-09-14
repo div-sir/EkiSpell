@@ -57,9 +57,17 @@ console.log(preview.rows, preview.warnings);
 
 `preview.complete` means every character has a selection. It does **not** mean the route, print format, or row count is valid. Inspect `overflow` and `warnings`. `rows` always preserve the intended top-to-bottom message. `chronologicalRows` reverse that order for a newest-first profile.
 
+## Real Japanese station data
+
+Click **載入日本真實站名** in the demo to load the pinned TrainLCD/StationAPI dataset: **9,485 operator/station groups across 47 prefectures**, with 601 line memberships and 162 operators. No API key is required. Each candidate keeps its source and line information.
+
+The bundled source is MIT-licensed; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Files are versioned and checked with SHA-256. [Integration details and update instructions](docs/real-data.md).
+
+These are real **station names**, not verified IC printer labels. The source does not establish IC eligibility, permitted paid journeys, fares, or current train service. All generated labels remain unverified.
+
 ## Data and limits
 
-The demo contains **7 official station names**. Their printed labels use an **invented `JR東 ` prefix**. Every label is `unverified`. These are not transcriptions of the supplied reference photo. The photo, card number, balances, and journey history are not included.
+The small reset dataset contains **7 official station names**. Their printed labels use an **invented `JR東 ` prefix**. Every label is `unverified`. These are not transcriptions of the supplied reference photo. The photo, card number, balances, and journey history are not included.
 
 Both sample profiles are illustrative: 20 rows / 12 cells with a synthetic prefix, and 10 rows / 8 cells with station names only. They do not establish the limits of any card or machine. Different devices need separately verified profiles. The matcher uses printed text, not station readings; it does not substitute hiragana, katakana, or similar kanji.
 

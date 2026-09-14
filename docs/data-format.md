@@ -4,7 +4,7 @@ Keep station identity separate from printer output. A station can have multiple 
 
 ## Station[] catalog
 
-The browser imports a JSON array. File size is limited to 2 MB and 10,000 stations.
+The browser imports a JSON array. File size is limited to 12 MB and 10,000 stations.
 
 ```json
 [
@@ -90,3 +90,5 @@ Legacy v1 drafts are accepted by validating their rows against the current catal
 Drafts contain no connected route. Do not use them as tickets, proof of travel, or routing results. Source links are displayed as clickable links only for HTTP(S); other evidence references remain plain text.
 
 Changing the order of a receipt-verified profile produces an unverified draft profile. The original device evidence does not verify an altered layout.
+
+Station records may also retain `lines`, `sourceStationIds`, and `sourceGroupId`. CatalogBundle may retain `attribution` entries containing name, source URL, license, full license text, and revision. Real-data exports preserve these fields.
