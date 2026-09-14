@@ -47,6 +47,7 @@ export interface MatchOptions {
   column?: number;
   verifiedOnly?: boolean;
   icSupportedOnly?: boolean;
+  icCard?: string;
 }
 export interface MessageSlot { character: string; candidates: Candidate[] }
 export interface SequenceRow {
@@ -113,6 +114,7 @@ export function findCandidates(character: string, stations: readonly Station[], 
   const matches: Candidate[] = [];
   for (const station of stations) {
     if (options.region && station.region !== options.region) continue;
+    if (options.icCard && (station.ic?.status !== 'supported' || !station.ic.cards.includes(options.icCard))) continue;
     if (options.icSupportedOnly && station.ic?.status !== 'supported') continue;
     for (const label of station.labels) {
       if (label.profileId !== options.profileId || (options.verifiedOnly && label.verification !== 'receipt-verified')) continue;

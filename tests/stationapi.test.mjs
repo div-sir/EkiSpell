@@ -36,12 +36,12 @@ test('broken line/company references and incomplete snapshots fail',()=>{
  const invalid={...data,companies:{}};
  assert.throws(()=>buildStationApiCatalog(manifest,invalid,manifest.licenseText),/Missing/);
 });
-test('IC coverage requires the exact operator and all known Metro lines',async()=>{
+test('IC coverage requires exact operators and reviewed line IDs',async()=>{
  const {stationApiIcEligibility,validateCatalog}=await import('../dist/index.js');
  assert.equal(stationApiIcEligibility('18',['28001']).status,'supported');
  for(const [company,lines] of [['2',['28001']],['18',[]],['18',['28001','future']]]) assert.equal(stationApiIcEligibility(company,lines).status,'unknown');
  const covered=bundle.stations.filter(s=>s.ic.status==='supported');
- assert.ok(covered.length>100);assert.ok(covered.every(s=>s.operator==='東京メトロ'));
+ assert.equal(covered.length,1289);assert.equal(new Set(covered.map(s=>s.operator)).size,27);assert.equal(covered.filter(s=>s.operator==='東京メトロ').length,144);
  const matches=matchMessage('京',bundle.stations,{profileId:'stationapi-name-only',icSupportedOnly:true})[0].candidates;
  assert.ok(matches.length);assert.ok(matches.every(m=>covered.some(s=>s.id===m.stationId)));
  assert.throws(()=>validateCatalog([{...covered[0],ic:{status:'supported'}}]),/evidence/);
@@ -56,4 +56,20 @@ test('inference is explicit, cell-aware, unverified, and independent of IC eligi
  const d=createDraft('京',bundle,{profileId:'ic-inferred-8',icSupportedOnly:true});
  assert.deepEqual(restoreDraft(d,bundle).draft,d);
  assert.throws(()=>restoreDraft({...d,options:{...d.options,icSupportedOnly:'yes'}},bundle),/boolean/);
+});
+
+test('PASMO expansion retains exclusions and respects card-specific coverage',async()=>{
+ const {stationApiIcEligibility}=await import('../dist/index.js');
+ assert.equal(stationApiIcEligibility('11',['21009']).status,'supported');
+ assert.equal(stationApiIcEligibility('128',['99502']).status,'unknown');
+ assert.equal(stationApiIcEligibility('151',['99344']).status,'unknown');
+ assert.equal(stationApiIcEligibility('19',['29003']).status,'unknown');
+ assert.equal(stationApiIcEligibility('toString',['28001']).status,'unknown');
+ assert.deepEqual(stationApiIcEligibility('132',['99318']).cards,['PASMO','Suica']);
+ const kantetsu=bundle.stations.filter(s=>s.operator==='関東鉄道');
+ assert.ok(matchMessage('取',kantetsu,{profileId:'stationapi-name-only',icCard:'Suica'})[0].candidates.length);
+ assert.equal(matchMessage('取',kantetsu,{profileId:'stationapi-name-only',icCard:'ICOCA'})[0].candidates.length,0);
+ const draft=createDraft('取',bundle,{profileId:'stationapi-name-only',icCard:'Suica'});
+ assert.deepEqual(restoreDraft(draft,bundle).draft,draft);
+ assert.throws(()=>restoreDraft({...draft,options:{...draft.options,icCard:4}},bundle),/IC card/);
 });

@@ -135,6 +135,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to add a station or printer profile. Code
 
 `Station.ic` 與印字驗證分開，狀態為 `supported`、`unsupported` 或 `unknown`；有結論時須附卡種、範圍、來源與查核日期。`MatchOptions.icSupportedOnly` 可篩選支持的站，Demo 與草稿匯出／還原已接入。匯入資料的標記由提供者負責，結構校驗不是獨立查證。
 
-目前內建僅涵蓋東京 Metro 9 線（StationAPI 業者 18 與路線白名單），依 [東京 Metro 官方 PASMO 說明](https://www.tokyometro.jp/ticket/types/pasmo/index.html)，查核日 2026-09-14。這是官方營運範圍與社群站點的對照，非逐站閘機實測；其他站保持未知，不等於不支援。IC 可乘車、可列印、印字內容、整段旅程可刷卡是不同問題。[JR 東日本規定](https://www.jreast.co.jp/suica/area/) 一般儲值乘車不可跨使用區域，因此不會用業者名稱直接確認全部 JR 站或跨區路徑。
+內建規則已擴充為 [PASMO 官方鐵道名單](https://www.pasmo.co.jp/area/train/) 的 27 家業者，使用明確路線 ID 白名單。這是官方營運範圍與社群站點的對照，非逐站閘機實測。未能明確對照的路線仍為未知，包括資料中的相鉄・JR直通線與箱根登山ケーブルカー；伊豆箱根駿豆線不在此 PASMO 清單中，也不推論其是否支援其他 IC 卡。
 
-衍生資料版本加上 `:ic-v1`，避免舊草稿無聲套用新增推測規則。此功能不更改路徑規劃器的合成網路，也不推定票價或實際可行旅程。
+依 [PASMO 互通規則](https://www.pasmo.co.jp/about/sharing/)，關東鐵道僅列 PASMO／Suica，其餘內建範圍列全國互通十卡。`MatchOptions.icCard` 可指定卡名；此條件本身即要求已知支援該卡，不必另開 `icSupportedOnly`。Demo 提供卡種選單及覆蓋筆數，草稿保留此條件。規則查核日為 2026-09-14；不包含特別票種及跨區使用保證。
+
+[PASMO 官方履歷說明](https://www.pasmo.co.jp/about/service/history/) 提醒：通常可印最近 20 筆，部分業者可查最近 26 週內最新 100 筆；全國互通區域的搭乘紀錄在 PASMO／Suica 區域印出時不顯示站名；定期券區間內乘車不列入履歷。Demo 顯示此限制。官方示意圖不是特定設備字典，故沒有把它轉成已驗證的站名簡稱。IC 可乘車、可列印、印字內容、整段旅程可刷卡是不同問題。
+
+衍生資料版本為 `:ic-v2`，避免舊草稿無聲套用新增卡種及覆蓋規則。此功能不更改路徑規劃器的合成網路，也不推定票價或實際可行旅程。

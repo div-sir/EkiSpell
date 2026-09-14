@@ -38,7 +38,7 @@ export function buildStationApiCatalog(manifest: StationApiManifest, data: Stati
   }
   if (stations.length !== manifest.stationCount) throw new Error('Incomplete source snapshot');
   const bundle: CatalogBundle = {
-    schemaVersion:1,id:'stationapi-japan',version:manifest.revision + ':ic-v1',
+    schemaVersion:1,id:'stationapi-japan',version:manifest.revision + ':ic-v2',
     attribution:[{name:'TrainLCD / StationAPI',url:'https://github.com/TrainLCD/StationAPI',license:'MIT',licenseText,revision:manifest.revision}],
     profiles:[{id:'stationapi-name-only',name:'真實站名原文（非 IC 列印格式）',maxRows:20,fieldCells:40,order:'oldest-first',verification:'unverified'}, {id:'ic-inferred-8',name:'IC 印字推測（無前綴／站名最多 8 格；低信心）',maxRows:20,fieldCells:8,order:'oldest-first',verification:'unverified'}],
     stations

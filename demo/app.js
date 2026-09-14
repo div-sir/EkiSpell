@@ -21,6 +21,9 @@ function render() {
     const activeProfile = bundle.profiles.find(p => p.id === $('profile').value);
     if (!activeProfile) throw new Error('請選擇列印格式');
     const options = { profileId: activeProfile.id, region: $('region').value, verifiedOnly: $('verified').checked, icSupportedOnly: $('ic-supported').checked };
+    if ($('ic-card').value) options.icCard = $('ic-card').value;
+    const covered = stations.filter(s => s.ic?.status === 'supported' && (!options.icCard || s.ic.cards.includes(options.icCard))).length;
+    $('ic-summary').textContent = `${covered} / ${stations.length} 筆站點有符合卡種的支援依據；未列入不等於不支援。指定卡種會直接篩選。`;
     if ($('alignment').value === 'fixed') options.column = Number($('column').value) - 1;
     const slots = matchMessage($('message').value, stations, options);
     const sequence = buildSequence(slots, selections);
@@ -111,7 +114,7 @@ function updateControls(profileId = bundle.profiles[0].id) {
   $('column').max = String(profile.fieldCells);
   $('catalog-note').textContent = `${stations.length} 站 · ${bundle.id} / ${bundle.version}。未匹配的字會保留空位。`;
 }
-for (const id of ['message', 'region', 'alignment', 'column', 'verified', 'ic-supported']) {
+for (const id of ['message', 'region', 'alignment', 'column', 'verified', 'ic-supported', 'ic-card']) {
   $(id).addEventListener(id === 'message' || id === 'column' ? 'input' : 'change', () => { selections = {}; $('import-status').textContent = ''; render(); });
 }
 for (const id of ['field', 'order']) $(id).addEventListener('change', render);
@@ -153,6 +156,8 @@ $('draft-file').addEventListener('change', async () => {
     $('field').value = d.field; $('order').value = d.profile.order;
     $('alignment').value = d.options.column === undefined ? 'any' : 'fixed';
     $('column').value = String((d.options.column ?? 5) + 1);
+    if (d.options.icCard && ![...$('ic-card').options].some(o => o.value === d.options.icCard)) $('ic-card').add(new Option(d.options.icCard, d.options.icCard));
+    $('ic-card').value = d.options.icCard ?? '';
     $('ic-supported').checked = d.options.icSupportedOnly ?? false;
     $('verified').checked = d.options.verifiedOnly ?? false;
     selections = restored.selections; render();

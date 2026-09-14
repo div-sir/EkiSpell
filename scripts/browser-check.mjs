@@ -84,7 +84,8 @@ try {
   await page.locator('#profile').selectOption('ic-inferred-8');
   await page.locator('#ic-supported').check();
   assert.match(await page.locator('#status').innerText(), /2 \/ 2/);
-  assert.match(await page.locator('#candidates').innerText(), /東京メトロ/);
+  assert.match(await page.locator('#candidates').innerText(), /官方規則涵蓋/);
+  await page.locator('#ic-card').selectOption('Suica');
   assert.match(await page.locator('#candidates').innerText(), /低信心/);
   await page.locator('#verified').check();
   assert.match(await page.locator('#status').innerText(), /0 \/ 2/);
@@ -97,6 +98,15 @@ try {
   await page.waitForFunction(() => document.getElementById('message').value === '東京');
   assert.equal(await page.locator('#region').inputValue(), 'JP-13');
   assert.equal(await page.locator('#ic-supported').isChecked(), true);
+  assert.equal(await page.locator('#ic-card').inputValue(), 'Suica');
+  await page.locator('#region').selectOption('JP-08');
+  await page.locator('#message').fill('取');
+  await page.locator('#candidate-0').selectOption({index:0});
+  const suicaOptions = await page.locator('#candidate-0 option').count();
+  await page.locator('#ic-card').selectOption('ICOCA');
+  const icocaOptions = await page.locator('#candidate-0 option').count();
+  assert.ok(suicaOptions > icocaOptions, 'Kanto Railway candidates require Suica/PASMO');
+  await page.locator('#ic-card').selectOption('');
   await page.locator('#ic-supported').uncheck();
   await page.locator('#reset').click();
   await page.locator('#message').fill('東京');
