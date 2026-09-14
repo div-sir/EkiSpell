@@ -27,7 +27,8 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "dev": "npm run build && node scripts/serve.mjs",
     "prepack": "npm run build",
-    "test:browser": "npm run build && node scripts/browser-check.mjs"
+    "test:browser": "npm run build && node scripts/browser-check.mjs",
+    "example:route": "npm run build && node examples/journey.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0",

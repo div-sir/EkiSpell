@@ -32,11 +32,11 @@ Acceptance: at least one device profile and 50 labels have reviewed evidence. Tw
 ## v0.3 — Feasible journeys
 
 - [ ] Select a licensed network data source; record provenance and update method.
-- [ ] Model each entry/exit transaction, not just a station visit.
-- [ ] Add start/end stations and verify connectivity between successive transactions.
-- [ ] Include positioning trips and intermediate history rows in layout constraints.
-- [ ] Return infeasible results when constraints cannot be satisfied.
-- [ ] Separate route feasibility from fare and timetable availability.
+- [x] Model each entry/exit transaction, not just a station visit (supplied networks).
+- [x] Add start/end stations and verify connectivity between successive transactions (supplied networks).
+- [x] Include positioning trips and intermediate history rows in layout constraints.
+- [x] Return infeasible results for exhausted networks; budget exhaustion remains unknown.
+- [x] Separate model feasibility from fare and timetable availability.
 
 Acceptance: small reference networks cover disconnected stations, extra transactions, reversals, and insufficient row capacity. Real journeys are reviewed against operator rules before being described as feasible.
 

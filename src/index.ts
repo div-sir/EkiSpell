@@ -146,3 +146,4 @@ export function renderPreview(sequence: readonly SequenceRow[], profile: PrintPr
 
 export { validateProfile, validateBundle, type CatalogBundle } from './catalog.js';
 export { createDraft, restoreDraft, type SavedDraft, type RestoredDraft } from './draft.js';
+export { planJourney, validateNetwork, type JourneyNetwork, type JourneyEdge, type JourneyStep, type JourneyRecord, type RouteOptions, type RouteResult } from './routing.js';

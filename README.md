@@ -72,6 +72,16 @@ Official station-name sources (not printed-label evidence):
 - [JR East Shinagawa](https://www.jreast.co.jp/estation/stations/788.html)
 - [JR East station index: Shibuya, Yokohama, Ueno, Sendai](https://www.jreast.co.jp/estation/)
 
+## Experimental transaction routing
+
+`planJourney` connects fixed selected labels using a supplied directed transaction network. It counts initial/final trips and any allowed intermediate paid records against the history limit. Search returns `found`, `infeasible`, or `limit-reached`; missing time/fare data remains null.
+
+```sh
+npm run example:route
+```
+
+The example is entirely fictional. No real railway network is bundled, and the browser remains a layout editor. See [docs/routing.md](docs/routing.md) for the API, network contract, and limits.
+
 ## Save and restore
 
 ```js
@@ -99,6 +109,7 @@ CI runs this check and saves desktop/mobile screenshots. The local test runner c
 | Path | Purpose |
 | --- | --- |
 | `src/index.ts` | Public matching and layout API |
+| `src/routing.ts` | Bounded transaction-network search |
 | `src/catalog.ts` | Versioned catalogs and printer-profile validation |
 | `src/draft.ts` | Draft serialization and verified restoration |
 | `src/sample.ts` | Small, explicitly unverified sample catalog |
