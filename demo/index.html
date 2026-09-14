@@ -21,6 +21,8 @@
 <div><label for="column">字的起始位置（半形格）</label><input id="column" type="number" min="1" max="12" value="6" disabled></div>
 <div><label for="order">列印順序</label><select id="order"><option value="oldest-first">舊紀錄在上</option><option value="newest-first">新紀錄在上</option></select></div>
 </div>
+<label class="check"><input id="ic-supported" type="checkbox"> 僅顯示 IC 官方規則涵蓋站（目前東京 Metro 9 線）</label>
+<p class="source">IC 可乘車不代表本站可列印，也不保證跨區旅程可刷卡。推測印字須用目標設備確認。</p>
 <label class="check"><input id="verified" type="checkbox"> 僅使用收據已驗證的列印名稱</label>
 <p class="hint">目前內建列印名稱均未驗證。固定位置以半形格計算，日文字佔兩格。</p>
 <div id="error" role="alert"></div>

@@ -128,3 +128,13 @@ CI runs this check and saves desktop/mobile screenshots. The local test runner c
 | `docs/validation.md` | Verification results and remaining limits |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to add a station or printer profile. Code and original project material use the [MIT License](LICENSE). Third-party evidence retains its source license.
+
+### IC 印字推測與乘車範圍
+
+真實資料另提供 `ic-inferred-8` 格式：假設無業者前綴、取站名左起最多 8 半形格（一般漢字 4 字）。這只是低信心的排字假設，未取得設備簡稱字典，也不代表實際收據。函式 `inferPrintedLabel(name, { profileId, prefix, nameCells })` 可調整前綴與寬度；輸出永遠是 `unverified`，附 `inference` 規則，不能通過 `verifiedOnly`。原文格式仍保留。
+
+`Station.ic` 與印字驗證分開，狀態為 `supported`、`unsupported` 或 `unknown`；有結論時須附卡種、範圍、來源與查核日期。`MatchOptions.icSupportedOnly` 可篩選支持的站，Demo 與草稿匯出／還原已接入。匯入資料的標記由提供者負責，結構校驗不是獨立查證。
+
+目前內建僅涵蓋東京 Metro 9 線（StationAPI 業者 18 與路線白名單），依 [東京 Metro 官方 PASMO 說明](https://www.tokyometro.jp/ticket/types/pasmo/index.html)，查核日 2026-09-14。這是官方營運範圍與社群站點的對照，非逐站閘機實測；其他站保持未知，不等於不支援。IC 可乘車、可列印、印字內容、整段旅程可刷卡是不同問題。[JR 東日本規定](https://www.jreast.co.jp/suica/area/) 一般儲值乘車不可跨使用區域，因此不會用業者名稱直接確認全部 JR 站或跨區路徑。
+
+衍生資料版本加上 `:ic-v1`，避免舊草稿無聲套用新增推測規則。此功能不更改路徑規劃器的合成網路，也不推定票價或實際可行旅程。

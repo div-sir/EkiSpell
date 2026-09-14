@@ -1,3 +1,4 @@
+import { inferPrintedLabel, stationApiIcEligibility } from './ic.js';
 import { cellWidth, graphemes, type Station } from './index.js';
 import { validateBundle, type CatalogBundle } from './catalog.js';
 export interface StationApiManifest {
@@ -29,16 +30,17 @@ export function buildStationApiCatalog(manifest: StationApiManifest, data: Stati
       try { graphemes(name).forEach(cellWidth); } catch { supported = false; }
       stations.push({ id: `stationapi:${id}`, name, operator, region: `JP-${pref}`,
         nameSource: `https://github.com/TrainLCD/StationAPI/blob/${manifest.revision}/data/3!stations.csv`,
+        ic: stationApiIcEligibility(companyId, members.map(m => m[1])),
         lines, sourceStationIds: members.map(m => m[0]), sourceGroupId: groupId,
-        labels: supported ? [{ id:'source-name',text:name,profileId:'stationapi-name-only',verification:'unverified' }] : []
+        labels: supported ? [{ id:'source-name',text:name,profileId:'stationapi-name-only',verification:'unverified' }, inferPrintedLabel(name, {profileId:'ic-inferred-8'})] : []
       });
     }
   }
   if (stations.length !== manifest.stationCount) throw new Error('Incomplete source snapshot');
   const bundle: CatalogBundle = {
-    schemaVersion:1,id:'stationapi-japan',version:manifest.revision,
+    schemaVersion:1,id:'stationapi-japan',version:manifest.revision + ':ic-v1',
     attribution:[{name:'TrainLCD / StationAPI',url:'https://github.com/TrainLCD/StationAPI',license:'MIT',licenseText,revision:manifest.revision}],
-    profiles:[{id:'stationapi-name-only',name:'真實站名原文（非 IC 列印格式）',maxRows:20,fieldCells:40,order:'oldest-first',verification:'unverified'}],
+    profiles:[{id:'stationapi-name-only',name:'真實站名原文（非 IC 列印格式）',maxRows:20,fieldCells:40,order:'oldest-first',verification:'unverified'}, {id:'ic-inferred-8',name:'IC 印字推測（無前綴／站名最多 8 格；低信心）',maxRows:20,fieldCells:8,order:'oldest-first',verification:'unverified'}],
     stations
   };
   validateBundle(bundle);

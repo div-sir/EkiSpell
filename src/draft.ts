@@ -39,6 +39,7 @@ function validateOptions(value: unknown): asserts value is MatchOptions {
   const o = value as Record<string, unknown>;
   if (typeof o.profileId !== 'string' || !o.profileId) throw new Error('Missing profile ID');
   if (o.region !== undefined && typeof o.region !== 'string') throw new Error('Region must be a string');
+  if (o.icSupportedOnly !== undefined && typeof o.icSupportedOnly !== 'boolean') throw new Error('icSupportedOnly must be boolean');
   if (o.verifiedOnly !== undefined && typeof o.verifiedOnly !== 'boolean') throw new Error('verifiedOnly must be boolean');
   if (o.column !== undefined && (typeof o.column !== 'number' || !Number.isSafeInteger(o.column) || o.column < 0)) throw new Error('Invalid column');
 }

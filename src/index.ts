@@ -6,6 +6,7 @@ export interface Station {
   operator: string;
   nameSource: string;
   labels: PrintedLabel[];
+  ic?: import("./ic.js").IcEligibility;
   lines?: { id: string; name: string }[];
   sourceStationIds?: string[];
   sourceGroupId?: string;
@@ -16,6 +17,7 @@ export interface PrintedLabel {
   profileId: string;
   verification: 'unverified' | 'receipt-verified';
   evidence?: string;
+  inference?: string;
 }
 export interface PrintProfile {
   id: string;
@@ -44,6 +46,7 @@ export interface MatchOptions {
   region?: string;
   column?: number;
   verifiedOnly?: boolean;
+  icSupportedOnly?: boolean;
 }
 export interface MessageSlot { character: string; candidates: Candidate[] }
 export interface SequenceRow {
@@ -83,9 +86,16 @@ export function validateCatalog(stations: unknown): asserts stations is Station[
     stationIds.add(station.id);
     if (!station.name || !station.region || !station.operator || !station.nameSource) throw new Error('Station metadata is incomplete');
     if (station.lines !== undefined && (!Array.isArray(station.lines) || station.lines.some((l: unknown) => !l || typeof l !== 'object' || typeof (l as {id?: unknown}).id !== 'string' || typeof (l as {name?: unknown}).name !== 'string'))) throw new Error('Invalid station lines');
+    if (station.ic !== undefined) {
+      const ic = station.ic;
+      if (!ic || !['unknown', 'supported', 'unsupported'].includes(ic.status)) throw new Error('Invalid IC status');
+      if (ic.status !== 'unknown' && (!Array.isArray(ic.cards) || !ic.cards.length || ic.cards.some((c: unknown) => typeof c !== 'string' || !c.trim()) ||
+        !['source','checkedAt','scope'].every(k => typeof ic[k] === 'string' && ic[k].trim()) || !/^https:\/\//.test(ic.source) || !/^\d{4}-\d{2}-\d{2}$/.test(ic.checkedAt))) throw new Error('IC status requires scoped evidence');
+    }
     const labels = new Set<string>();
     for (const label of station.labels) {
       if (!label || typeof label !== 'object' || !['id', 'text', 'profileId'].every(key => typeof label[key] === 'string' && label[key].length > 0)) throw new Error('Invalid printed label');
+      if (label.inference !== undefined && (typeof label.inference !== 'string' || !label.inference.trim() || label.verification !== 'unverified')) throw new Error('Inference must remain unverified');
       if (label.evidence !== undefined && typeof label.evidence !== 'string') throw new Error('Evidence must be a string');
       if (!label.id || labels.has(label.id) || !label.profileId || !label.text) throw new Error('Invalid printed label');
       labels.add(label.id);
@@ -103,6 +113,7 @@ export function findCandidates(character: string, stations: readonly Station[], 
   const matches: Candidate[] = [];
   for (const station of stations) {
     if (options.region && station.region !== options.region) continue;
+    if (options.icSupportedOnly && station.ic?.status !== 'supported') continue;
     for (const label of station.labels) {
       if (label.profileId !== options.profileId || (options.verifiedOnly && label.verification !== 'receipt-verified')) continue;
       let column = 0;
@@ -153,3 +164,5 @@ export { createDraft, restoreDraft, type SavedDraft, type RestoredDraft } from '
 export { planJourney, validateNetwork, type JourneyNetwork, type JourneyEdge, type JourneyStep, type JourneyRecord, type RouteOptions, type RouteResult } from './routing.js';
 
 export { buildStationApiCatalog, type StationApiManifest, type StationApiData, type StationApiRow } from './stationapi.js';
+
+export { inferPrintedLabel, stationApiIcEligibility, type IcEligibility } from './ic.js';

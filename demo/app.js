@@ -20,7 +20,7 @@ function render() {
   try {
     const activeProfile = bundle.profiles.find(p => p.id === $('profile').value);
     if (!activeProfile) throw new Error('請選擇列印格式');
-    const options = { profileId: activeProfile.id, region: $('region').value, verifiedOnly: $('verified').checked };
+    const options = { profileId: activeProfile.id, region: $('region').value, verifiedOnly: $('verified').checked, icSupportedOnly: $('ic-supported').checked };
     if ($('alignment').value === 'fixed') options.column = Number($('column').value) - 1;
     const slots = matchMessage($('message').value, stations, options);
     const sequence = buildSequence(slots, selections);
@@ -54,6 +54,12 @@ function render() {
         source.append(sourceLink('正式站名來源', station.nameSource));
         if (printed.evidence) source.append(document.createTextNode(' · '), sourceLink('列印佐證', printed.evidence));
         else source.append(document.createTextNode(' · 列印名稱尚無佐證'));
+        if (printed.inference) source.append(document.createTextNode(' · ' + printed.inference));
+        const ic = station.ic;
+        source.append(document.createTextNode(ic?.status === 'supported' ? ' · IC：官方規則涵蓋（資料提供者標記）' : ic?.status === 'unsupported' ? ' · IC：指定卡種不支援' : ' · IC：未知'));
+        if (ic && ic.status !== 'unknown') {
+          source.append(document.createTextNode(` · ${ic.cards.join('／')} · 查核 ${ic.checkedAt} · ${ic.scope} · `), sourceLink('IC 依據', ic.source));
+        }
         content.append(source);
       }
       row.append(content); $('candidates').append(row);
@@ -105,7 +111,7 @@ function updateControls(profileId = bundle.profiles[0].id) {
   $('column').max = String(profile.fieldCells);
   $('catalog-note').textContent = `${stations.length} 站 · ${bundle.id} / ${bundle.version}。未匹配的字會保留空位。`;
 }
-for (const id of ['message', 'region', 'alignment', 'column', 'verified']) {
+for (const id of ['message', 'region', 'alignment', 'column', 'verified', 'ic-supported']) {
   $(id).addEventListener(id === 'message' || id === 'column' ? 'input' : 'change', () => { selections = {}; $('import-status').textContent = ''; render(); });
 }
 for (const id of ['field', 'order']) $(id).addEventListener('change', render);
@@ -147,6 +153,7 @@ $('draft-file').addEventListener('change', async () => {
     $('field').value = d.field; $('order').value = d.profile.order;
     $('alignment').value = d.options.column === undefined ? 'any' : 'fixed';
     $('column').value = String((d.options.column ?? 5) + 1);
+    $('ic-supported').checked = d.options.icSupportedOnly ?? false;
     $('verified').checked = d.options.verifiedOnly ?? false;
     selections = restored.selections; render();
     $('import-status').textContent = data.schemaVersion === 1 ? '舊版草稿已重新驗證並轉為新版。' : '草稿已還原，候選站已重新驗證。';

@@ -36,3 +36,24 @@ test('broken line/company references and incomplete snapshots fail',()=>{
  const invalid={...data,companies:{}};
  assert.throws(()=>buildStationApiCatalog(manifest,invalid,manifest.licenseText),/Missing/);
 });
+test('IC coverage requires the exact operator and all known Metro lines',async()=>{
+ const {stationApiIcEligibility,validateCatalog}=await import('../dist/index.js');
+ assert.equal(stationApiIcEligibility('18',['28001']).status,'supported');
+ for(const [company,lines] of [['2',['28001']],['18',[]],['18',['28001','future']]]) assert.equal(stationApiIcEligibility(company,lines).status,'unknown');
+ const covered=bundle.stations.filter(s=>s.ic.status==='supported');
+ assert.ok(covered.length>100);assert.ok(covered.every(s=>s.operator==='東京メトロ'));
+ const matches=matchMessage('京',bundle.stations,{profileId:'stationapi-name-only',icSupportedOnly:true})[0].candidates;
+ assert.ok(matches.length);assert.ok(matches.every(m=>covered.some(s=>s.id===m.stationId)));
+ assert.throws(()=>validateCatalog([{...covered[0],ic:{status:'supported'}}]),/evidence/);
+});
+test('inference is explicit, cell-aware, unverified, and independent of IC eligibility',async()=>{
+ const {inferPrintedLabel,validateCatalog}=await import('../dist/index.js');
+ const label=inferPrintedLabel('明治神宮前',{profileId:'guess',prefix:'JR',nameCells:6});
+ assert.equal(label.text,'JR明治神');assert.equal(label.verification,'unverified');assert.ok(label.inference);
+ assert.throws(()=>inferPrintedLabel('東京',{profileId:'guess',nameCells:1}),/Invalid/);
+ assert.throws(()=>validateCatalog([{...bundle.stations[0],labels:[{...label,verification:'receipt-verified',evidence:'test'}]}]),/Inference/);
+ assert.equal(matchMessage('京',bundle.stations,{profileId:'ic-inferred-8',verifiedOnly:true})[0].candidates.length,0);
+ const d=createDraft('京',bundle,{profileId:'ic-inferred-8',icSupportedOnly:true});
+ assert.deepEqual(restoreDraft(d,bundle).draft,d);
+ assert.throws(()=>restoreDraft({...d,options:{...d.options,icSupportedOnly:'yes'}},bundle),/boolean/);
+});
