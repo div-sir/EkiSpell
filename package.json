@@ -1,0 +1,40 @@
+{
+  "name": "ekispell",
+  "version": "0.1.0",
+  "description": "Compose station-name messages for IC-card history layout experiments.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./data/*": "./data/*"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "data/stationapi",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/div-sir/EkiSpell.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "dev": "npm run build && node scripts/serve.mjs",
+    "prepack": "npm run build",
+    "test:browser": "npm run build && node scripts/browser-check.mjs",
+    "example:route": "npm run build && node examples/journey.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0",
+    "typescript": "5.9.3"
+  }
+}
